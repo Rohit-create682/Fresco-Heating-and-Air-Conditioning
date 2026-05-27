@@ -102,7 +102,7 @@ function ServiceBadge({ type }: { type: string }) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusDropdown({ status, onChange }: { status: string; onChange: (s: string) => void }) {
   const map: Record<string, string> = {
     "Awaiting Dispatch": "bg-amber-500/15 text-amber-400 border-amber-500/25",
     "Technician En Route": "bg-orange-500/15 text-orange-400 border-orange-500/25",
@@ -117,19 +117,41 @@ function StatusBadge({ status }: { status: string }) {
     "On Site": "bg-violet-400",
     Completed: "bg-emerald-400",
   };
+
+  const options = [
+    "Awaiting Dispatch",
+    "Scheduled",
+    "Technician En Route",
+    "On Site",
+    "Completed",
+  ];
+
   return (
-    <span
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border ${
-        map[status] || "bg-slate-500/15 text-slate-400 border-slate-500/25"
-      }`}
-    >
+    <div className="relative inline-block w-40">
       <span
-        className={`w-2 h-2 rounded-full ${dotMap[status] || "bg-slate-400"} ${
+        className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none ${dotMap[status] || "bg-slate-400"} ${
           status !== "Completed" ? "animate-pulse" : ""
         }`}
       />
-      {status}
-    </span>
+      <select
+        value={status}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full appearance-none cursor-pointer outline-none inline-flex items-center gap-2 pl-7 pr-8 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+          map[status] || "bg-slate-500/15 text-slate-400 border-slate-500/25"
+        }`}
+      >
+        {options.map((opt) => (
+          <option key={opt} value={opt} className="bg-slate-900 text-slate-200">
+            {opt}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-inherit">
+        <svg className="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
   );
 }
 
@@ -302,20 +324,26 @@ export default function AdminDashboard() {
     setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
-  const openRequests = serviceRequests.filter((r) => r.status !== "Completed").length;
-  const dispatched = serviceRequests.filter(
+  const [requests, setRequests] = useState(serviceRequests);
+
+  const openRequests = requests.filter((r) => r.status === "Awaiting Dispatch").length;
+  const dispatched = requests.filter(
     (r) => r.status === "Technician En Route" || r.status === "On Site"
   ).length;
-  const completed = serviceRequests.filter((r) => r.status === "Completed").length;
+  const completed = requests.filter((r) => r.status === "Completed").length;
 
-  let displayedRequests = serviceRequests;
+  const updateStatus = (id: string, newStatus: string) => {
+    setRequests(requests.map((r) => (r.id === id ? { ...r, status: newStatus } : r)));
+  };
+
+  let displayedRequests = requests;
   let tableTitle = "Incoming Service Requests";
   
   if (activeTab === "Active Dispatches") {
-    displayedRequests = serviceRequests.filter(r => r.serviceType.includes("Emergency"));
+    displayedRequests = requests.filter(r => r.serviceType.includes("Emergency"));
     tableTitle = "Active Dispatches";
   } else if (activeTab === "Maintenance Schedule") {
-    displayedRequests = serviceRequests.filter(r => r.serviceType.includes("Routine"));
+    displayedRequests = requests.filter(r => r.serviceType.includes("Routine"));
     tableTitle = "Maintenance Schedule";
   }
 
@@ -564,7 +592,10 @@ export default function AdminDashboard() {
 
                         {/* Status */}
                         <td className="px-5 py-4">
-                          <StatusBadge status={r.status} />
+                          <StatusDropdown 
+                            status={r.status} 
+                            onChange={(s) => updateStatus(r.id, s)} 
+                          />
                         </td>
                       </tr>
                     ))}
