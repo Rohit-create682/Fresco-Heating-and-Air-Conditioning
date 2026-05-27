@@ -30,8 +30,9 @@ const serviceRequests = [
     dateTime: "May 27, 2026 · 10:14 AM",
     customer: "Margaret Thompson",
     phone: "(512) 555-8821",
+    email: "m.thompson@example.com",
     location: "Georgetown",
-    serviceType: "Emergency / No A/C",
+    serviceType: "Service",
     issue: "Complete system failure — no cooling, thermostat unresponsive",
     status: "Awaiting Dispatch",
   },
@@ -40,8 +41,9 @@ const serviceRequests = [
     dateTime: "May 27, 2026 · 10:42 AM",
     customer: "Robert & Linda Chen",
     phone: "(512) 555-3347",
+    email: "rchen.tx@example.com",
     location: "Round Rock",
-    serviceType: "Emergency / No A/C",
+    serviceType: "Commercial and Residential",
     issue: "AC blowing warm air, compressor making loud noise",
     status: "Technician En Route",
   },
@@ -50,8 +52,9 @@ const serviceRequests = [
     dateTime: "May 27, 2026 · 11:05 AM",
     customer: "David Nguyen",
     phone: "(512) 555-6190",
+    email: "david.n88@example.com",
     location: "Cedar Park",
-    serviceType: "Routine Maintenance",
+    serviceType: "Maintenance",
     issue: "Annual tune-up and filter replacement",
     status: "Scheduled",
   },
@@ -60,8 +63,9 @@ const serviceRequests = [
     dateTime: "May 27, 2026 · 11:38 AM",
     customer: "Patricia Davis",
     phone: "(512) 555-4455",
+    email: "patty.davis@example.com",
     location: "Leander",
-    serviceType: "Emergency / No A/C",
+    serviceType: "Service",
     issue: "Frozen evaporator coil — ice buildup on indoor unit",
     status: "On Site",
   },
@@ -70,8 +74,9 @@ const serviceRequests = [
     dateTime: "May 27, 2026 · 12:01 PM",
     customer: "William Foster",
     phone: "(512) 555-7723",
+    email: "wfoster.tech@example.com",
     location: "Sun City",
-    serviceType: "Routine Maintenance",
+    serviceType: "Maintenance",
     issue: "Seasonal inspection before summer, duct cleaning",
     status: "Completed",
   },
@@ -87,17 +92,17 @@ const navItems = [
 
 /* ──────────────────────────── Badges ──────────────────────────── */
 function ServiceBadge({ type }: { type: string }) {
-  const isEmergency = type.toLowerCase().includes("emergency");
+  const isUrgent = type === "Service" || type === "Commercial and Residential";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
-        isEmergency
-          ? "bg-red-500/15 text-red-400 border border-red-500/25"
-          : "bg-sky-500/15 text-sky-400 border border-sky-500/25"
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide border ${
+        isUrgent
+          ? "bg-red-900/50 text-red-400 border-red-500/25"
+          : "bg-blue-900/50 text-blue-400 border-blue-500/25"
       }`}
     >
-      {isEmergency && <AlertTriangle className="w-3 h-3" />}
-      {isEmergency ? "Emergency / No A/C" : "Routine Maintenance"}
+      {isUrgent && <AlertTriangle className="w-3 h-3" />}
+      {type}
     </span>
   );
 }
@@ -300,6 +305,7 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<typeof serviceRequests[0] | null>(null);
 
   // Initialize notifications state with an isRead flag
   const [notifications, setNotifications] = useState(() => 
@@ -340,10 +346,10 @@ export default function AdminDashboard() {
   let tableTitle = "Incoming Service Requests";
   
   if (activeTab === "Active Dispatches") {
-    displayedRequests = requests.filter(r => r.serviceType.includes("Emergency"));
+    displayedRequests = requests.filter(r => r.serviceType === "Service" || r.serviceType === "Commercial and Residential");
     tableTitle = "Active Dispatches";
   } else if (activeTab === "Maintenance Schedule") {
-    displayedRequests = requests.filter(r => r.serviceType.includes("Routine"));
+    displayedRequests = requests.filter(r => r.serviceType === "Maintenance");
     tableTitle = "Maintenance Schedule";
   }
 
@@ -443,7 +449,7 @@ export default function AdminDashboard() {
                         <X className="w-3.5 h-3.5" />
                       </button>
                       <div className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!req.isRead ? (req.serviceType.includes('Emergency') ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-blue-500') : 'bg-slate-600'}`} />
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!req.isRead ? ((req.serviceType === 'Service' || req.serviceType === 'Commercial and Residential') ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-blue-500') : 'bg-slate-600'}`} />
                         <div className="pr-6">
                           <p className={`text-sm font-semibold transition-colors ${!req.isRead ? 'text-slate-200 group-hover:text-white' : 'text-slate-400'}`}>{req.serviceType}</p>
                           <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">{req.issue}</p>
@@ -552,7 +558,8 @@ export default function AdminDashboard() {
                         {displayedRequests.map((r) => (
                       <tr
                         key={r.id}
-                        className="hover:bg-slate-800/40 transition-colors duration-150 cursor-pointer group"
+                        onClick={() => setSelectedRequest(r)}
+                        className="hover:bg-slate-800/50 transition-colors duration-150 cursor-pointer group"
                       >
                         {/* Date / Time */}
                         <td className="px-5 py-4 whitespace-nowrap">
@@ -584,14 +591,14 @@ export default function AdminDashboard() {
                         </td>
 
                         {/* Issue */}
-                        <td className="px-5 py-4 max-w-[260px]">
+                        <td className="px-5 py-4 max-w-xs">
                           <p className="text-xs text-slate-500 truncate">
                             {r.issue}
                           </p>
                         </td>
 
                         {/* Status */}
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                           <StatusDropdown 
                             status={r.status} 
                             onChange={(s) => updateStatus(r.id, s)} 
@@ -634,6 +641,68 @@ export default function AdminDashboard() {
           </span>
         </footer>
       </div>
+
+      {/* ── Modal ── */}
+      {selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-start">
+              <div>
+                <h2 className="text-xl font-bold text-white">{selectedRequest.customer}</h2>
+                <div className="flex items-center gap-1.5 text-sm text-slate-400 mt-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {selectedRequest.location}
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedRequest(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Service Type</p>
+                <ServiceBadge type={selectedRequest.serviceType} />
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Customer&apos;s Custom Message:</p>
+                <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    {selectedRequest.issue}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Contact Info</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                    <p className="text-[10px] text-slate-500 font-semibold mb-0.5">Phone</p>
+                    <p className="text-sm text-slate-200">{selectedRequest.phone}</p>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                    <p className="text-[10px] text-slate-500 font-semibold mb-0.5">Email</p>
+                    <p className="text-sm text-slate-200">{selectedRequest.email}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
+              <button 
+                onClick={() => setSelectedRequest(null)}
+                className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
