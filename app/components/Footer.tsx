@@ -98,31 +98,11 @@ export default function Footer() {
                 Heating &amp; Air Conditioning
               </h4>
               <ul className="space-y-2.5 text-sm">
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    A/C Installation
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    A/C Repairs
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Ductless Mini-Splits
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Multi-Zone System
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Heat Pump Repair
-                  </a>
-                </li>
+                <li className="text-slate-600">A/C Installation</li>
+                <li className="text-slate-600">A/C Repairs</li>
+                <li className="text-slate-600">Ductless Mini-Splits</li>
+                <li className="text-slate-600">Multi-Zone System</li>
+                <li className="text-slate-600">Heat Pump Repair</li>
               </ul>
             </div>
 
@@ -133,26 +113,10 @@ export default function Footer() {
                 &nbsp;
               </h4>
               <ul className="space-y-2.5 text-sm">
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Maintenance Plan
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Furnace Repair
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Furnace Installation
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Air Quality
-                  </a>
-                </li>
+                <li className="text-slate-600">Maintenance Plan</li>
+                <li className="text-slate-600">Furnace Repair</li>
+                <li className="text-slate-600">Furnace Installation</li>
+                <li className="text-slate-600">Air Quality</li>
               </ul>
             </div>
 
@@ -162,31 +126,11 @@ export default function Footer() {
                 Commercial
               </h4>
               <ul className="space-y-2.5 text-sm">
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Maintenance Plans
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    A/C Repairs
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Air Quality
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    A/C Installation
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Heat Pump Installation
-                  </a>
-                </li>
+                <li className="text-slate-600">Maintenance Plans</li>
+                <li className="text-slate-600">A/C Repairs</li>
+                <li className="text-slate-600">Air Quality</li>
+                <li className="text-slate-600">A/C Installation</li>
+                <li className="text-slate-600">Heat Pump Installation</li>
               </ul>
             </div>
           </div>

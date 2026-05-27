@@ -346,10 +346,14 @@ export default function AdminDashboard() {
   let tableTitle = "Incoming Service Requests";
   
   if (activeTab === "Active Dispatches") {
-    displayedRequests = requests.filter(r => r.serviceType === "Service" || r.serviceType === "Commercial and Residential");
+    displayedRequests = requests.filter(
+      (r) => r.status === "Technician En Route" || r.status === "On Site"
+    );
     tableTitle = "Active Dispatches";
   } else if (activeTab === "Maintenance Schedule") {
-    displayedRequests = requests.filter(r => r.serviceType === "Maintenance");
+    displayedRequests = requests.filter(
+      (r) => r.serviceType === "Maintenance" && r.status !== "Completed"
+    );
     tableTitle = "Maintenance Schedule";
   }
 
