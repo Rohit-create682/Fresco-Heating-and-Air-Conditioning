@@ -29,6 +29,19 @@ The storage layer lives in `lib/requests.ts`. Writes go through a promise
 queue so concurrent POST/PATCH can't clobber each other, and each write is
 write-temp-then-rename so a crash can't corrupt the file.
 
+## Confirmation emails
+
+Every booking triggers a confirmation email to the customer (reference
+number plus everything they entered) via SendGrid's Web API. It activates
+once two env vars exist in `.env.local` (copy `.env.local.example`):
+
+- `SENDGRID_API_KEY` - sendgrid.com, Settings > API Keys
+- `BOOKING_FROM_EMAIL` - a sender verified under Settings > Sender
+  Authentication (Single Sender Verification needs no domain)
+
+Without them the emails are skipped and bookings work as normal. SendGrid
+failures are logged, never fatal to a booking. Free tier: 100 emails/day.
+
 ## Running it
 
 ```bash

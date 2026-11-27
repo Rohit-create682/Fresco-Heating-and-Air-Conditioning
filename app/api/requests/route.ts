@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRequest, listRequests } from "@/lib/requests";
+import { sendBookingConfirmation } from "@/lib/email";
 
 // Never cache this; the admin dashboard polls it for live data.
 export const dynamic = "force-dynamic";
@@ -59,6 +60,10 @@ export async function POST(request: Request) {
     serviceType: fields.serviceType,
     issue: fields.issue,
   });
+
+  // Awaits but never throws: if email isn't configured or SendGrid hiccups,
+  // the booking still succeeds and we just log it.
+  await sendBookingConfirmation(created);
 
   return NextResponse.json({ request: created }, { status: 201 });
 }

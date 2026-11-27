@@ -12,6 +12,7 @@ import {
   Snowflake,
   Phone,
 } from "lucide-react";
+import { SERVICE_LOCATIONS } from "@/lib/service-locations";
 
 /* ──────────────────────────── Types ──────────────────────────── */
 type ServiceType = string | null;
@@ -27,15 +28,8 @@ interface FormData {
 
 // Value is what the select holds, label is what the customer sees. The API
 // stores the label so the admin board reads "Cedar Park", not "cedar-park".
-const locations = [
-  { value: "georgetown", label: "Georgetown" },
-  { value: "leander", label: "Leander" },
-  { value: "cedar-park", label: "Cedar Park" },
-  { value: "round-rock", label: "Round Rock" },
-  { value: "sun-city", label: "Sun City" },
-  { value: "pflugerville", label: "Pflugerville" },
-  { value: "austin", label: "Austin" },
-];
+// Lives in lib/ so the confirmation email can reuse the same list.
+const locations = SERVICE_LOCATIONS;
 
 /* ──────────────────────────── Service Cards ──────────────────────────── */
 const services = [
@@ -95,18 +89,6 @@ export default function BookingPage() {
     issue: "",
   });
 
-  // A link like /booking?service=Maintenance (from the services section on
-  // the home page) pre-selects that card. Done in an effect instead of
-  // useSearchParams so the page stays a simple static prerender.
-  useEffect(() => {
-    const service = new URLSearchParams(window.location.search).get("service");
-    if (service && services.some((s) => s.id === service)) {
-      handleServiceSelect(service);
-    }
-    // Only on first load.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -118,6 +100,21 @@ export default function BookingPage() {
       document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   };
+
+  // A link like /booking?service=Maintenance (from the services section on
+  // the home page) pre-selects that card. Done in an effect instead of
+  // useSearchParams so the page stays a simple static prerender.
+  useEffect(() => {
+    const service = new URLSearchParams(window.location.search).get("service");
+    if (service && services.some((s) => s.id === service)) {
+      // Deferred a tick: React (rightly) complains about setState straight
+      // inside an effect body.
+      const t = setTimeout(() => handleServiceSelect(service), 0);
+      return () => clearTimeout(t);
+    }
+    // Only on first load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
