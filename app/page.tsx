@@ -160,6 +160,7 @@ function Features() {
 }
 
 /* ──────────────────────────── Services ──────────────────────────── */
+// Each card jumps to the booking page with the closest service pre-selected.
 const services = [
   {
     icon: Snowflake,
@@ -167,6 +168,7 @@ const services = [
     desc: "Expert air conditioning repair, replacement, and new installations for all major brands.",
     color: "bg-sky-50 text-sky-600",
     border: "border-sky-200",
+    booking: "Service",
   },
   {
     icon: ThermometerSun,
@@ -174,6 +176,7 @@ const services = [
     desc: "Furnace repair, heat pump installation, and complete heating system diagnostics.",
     color: "bg-orange-50 text-orange-600",
     border: "border-orange-200",
+    booking: "Service",
   },
   {
     icon: Wrench,
@@ -181,6 +184,7 @@ const services = [
     desc: "Full HVAC system design and installation for new construction and retrofits.",
     color: "bg-violet-50 text-violet-600",
     border: "border-violet-200",
+    booking: "Installation",
   },
   {
     icon: Fan,
@@ -188,6 +192,7 @@ const services = [
     desc: "Preventative maintenance programs to extend system life and lower energy bills.",
     color: "bg-emerald-50 text-emerald-600",
     border: "border-emerald-200",
+    booking: "Maintenance",
   },
 ];
 
@@ -206,8 +211,9 @@ function Services() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {services.map((s) => (
-            <div
+            <Link
               key={s.title}
+              href={`/booking?service=${encodeURIComponent(s.booking)}`}
               className={`group flex items-start gap-5 p-6 rounded-2xl bg-white border ${s.border} hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer`}
             >
               <div className={`flex-shrink-0 w-14 h-14 rounded-xl ${s.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -218,7 +224,7 @@ function Services() {
                 <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
               </div>
               <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all ml-auto mt-1 flex-shrink-0" />
-            </div>
+            </Link>
           ))}
         </div>
       </div>

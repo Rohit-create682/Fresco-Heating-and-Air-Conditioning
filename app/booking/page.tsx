@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Briefcase,
@@ -94,6 +94,18 @@ export default function BookingPage() {
     location: "",
     issue: "",
   });
+
+  // A link like /booking?service=Maintenance (from the services section on
+  // the home page) pre-selects that card. Done in an effect instead of
+  // useSearchParams so the page stays a simple static prerender.
+  useEffect(() => {
+    const service = new URLSearchParams(window.location.search).get("service");
+    if (service && services.some((s) => s.id === service)) {
+      handleServiceSelect(service);
+    }
+    // Only on first load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
