@@ -13,6 +13,7 @@ import {
   Phone,
 } from "lucide-react";
 import { SERVICE_LOCATIONS, PREFERRED_TIME_WINDOWS } from "@/lib/service-locations";
+import { formatPreferredDate } from "@/lib/format";
 
 /* ──────────────────────────── Types ──────────────────────────── */
 type ServiceType = string | null;
@@ -397,7 +398,7 @@ export default function BookingPage() {
                 <div className="flex justify-between gap-4"><dt className="text-slate-500">Location</dt><dd className="text-slate-800 font-medium text-right">{locations.find((l) => l.value === formData.location)?.label ?? formData.location}</dd></div>
                 <div className="flex justify-between gap-4"><dt className="text-slate-500">Phone</dt><dd className="text-slate-800 font-medium text-right">{formData.phone}</dd></div>
                 {(formData.preferredDate || formData.preferredTime) && (
-                  <div className="flex justify-between gap-4"><dt className="text-slate-500">Preferred</dt><dd className="text-slate-800 font-medium text-right">{[formData.preferredDate, formData.preferredTime].filter(Boolean).join(" · ")}</dd></div>
+                  <div className="flex justify-between gap-4"><dt className="text-slate-500">Preferred</dt><dd className="text-slate-800 font-medium text-right">{[formData.preferredDate && formatPreferredDate(formData.preferredDate), formData.preferredTime].filter(Boolean).join(" · ")}</dd></div>
                 )}
               </dl>
             </div>

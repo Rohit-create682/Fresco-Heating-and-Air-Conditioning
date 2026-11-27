@@ -22,6 +22,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import type { ServiceRequest } from "@/lib/requests";
+import { formatPreferredDate } from "@/lib/format";
 
 /* ──────────────────────────── Helpers ──────────────────────────── */
 
@@ -751,7 +752,7 @@ export default function AdminDashboard() {
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Requested Time</p>
                   <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
                     <p className="text-sm text-slate-200">
-                      {[selectedRequest.preferredDate, selectedRequest.preferredTime].filter(Boolean).join(" · ")}
+                      {[selectedRequest.preferredDate && formatPreferredDate(selectedRequest.preferredDate), selectedRequest.preferredTime].filter(Boolean).join(" · ")}
                     </p>
                   </div>
                 </div>

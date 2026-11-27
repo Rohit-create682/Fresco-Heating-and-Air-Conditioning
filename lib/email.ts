@@ -1,5 +1,6 @@
 import type { ServiceRequest } from "./requests";
 import { locationLabel } from "./service-locations";
+import { formatPreferredDate } from "./format";
 
 /* ──────────────────────────── Confirmation emails ────────────────────────────
    Sends through a transactional email API over plain HTTPS, so there is no
@@ -56,7 +57,7 @@ export function buildConfirmationEmail(r: ServiceRequest): {
     ["What's going on", r.issue],
   ];
   // Only booked-in scheduling preferences show up; most fields stay optional.
-  if (r.preferredDate) details.push(["Preferred date", r.preferredDate]);
+  if (r.preferredDate) details.push(["Preferred date", formatPreferredDate(r.preferredDate)]);
   if (r.preferredTime) details.push(["Preferred time", r.preferredTime]);
 
   const subject = `Booking confirmed (${r.id}) - Fresco Heating & Air`;
