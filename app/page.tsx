@@ -15,7 +15,6 @@ import {
   ArrowRight,
   Fan,
 } from "lucide-react";
-import { useState } from "react";
 
 import Navbar from "./components/Navbar";
 
@@ -330,7 +329,7 @@ function CtaBanner() {
               Need HVAC Help Right Now?
             </h2>
             <p className="text-blue-100 max-w-lg mx-auto mb-8 text-lg">
-              Don't sweat it. Our technicians are standing by for fast, reliable service.
+              Don&apos;t sweat it. Our technicians are standing by for fast, reliable service.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link

@@ -3,7 +3,8 @@ import { Mail, Phone, Clock } from "lucide-react";
 /* ──────────────────────────── Footer ──────────────────────────── */
 export default function Footer() {
   return (
-    <footer>
+    // id="contact" because the navbar's Contact link jumps to /#contact
+    <footer id="contact">
       {/* ── Section 1: Blue Contact Banner ── */}
       <div className="bg-blue-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

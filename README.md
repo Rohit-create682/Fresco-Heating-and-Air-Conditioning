@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fresco Heating & Air Conditioning
 
-## Getting Started
+Marketing site + booking system for a (fictional) HVAC company in Georgetown, TX.
+Built with Next.js 16 (App Router), React 19, and Tailwind CSS 4.
 
-First, run the development server:
+## Pages
+
+- `/` - landing page (hero, features, services, service areas, reviews, contact footer)
+- `/about` - company story
+- `/booking` - service picker + appointment form, submits to the API
+- `/admin` - dispatch console: live board of every booking, status pipeline,
+  search, notifications, and a detail modal per request
+
+## Backend
+
+There is no external database. Bookings are stored as JSON in
+`data/requests.json` (gitignored, created on first run and seeded with five
+sample tickets so the dashboard isn't empty).
+
+API routes (Next.js route handlers):
+
+| Method | Route                  | What it does                                        |
+| ------ | ---------------------- | --------------------------------------------------- |
+| GET    | `/api/requests`        | List all requests, newest first                     |
+| POST   | `/api/requests`        | Create a request (booking form posts here)          |
+| PATCH  | `/api/requests/[id]`   | Update a request's status (admin dropdown)          |
+
+The storage layer lives in `lib/requests.ts`. Writes go through a promise
+queue so concurrent POST/PATCH can't clobber each other, and each write is
+write-temp-then-rename so a crash can't corrupt the file.
+
+## Running it
 
 ```bash
-npm run dev
+npm install
+npm run dev      # dev server on http://localhost:3000
 # or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build && npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The admin dashboard polls `/api/requests` every 15 seconds, so a booking
+submitted in one tab shows up in the admin tab on its own.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Head's up
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Because the store is a local JSON file, this setup wants a single
+long-running server (dev machine, VPS, Docker). On serverless hosts like
+Vercel the filesystem is ephemeral, so swap `lib/requests.ts` for a real
+database (Postgres, SQLite over a mounted volume, etc.) before deploying
+there. The route handlers only talk to that one file, so the swap is
+contained.

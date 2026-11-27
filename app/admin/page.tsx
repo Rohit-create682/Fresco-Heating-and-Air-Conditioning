@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -14,7 +14,6 @@ import {
   ClipboardCheck,
   AlertTriangle,
   MapPin,
-  Calendar,
   Clock,
   ChevronRight,
   Menu,
@@ -22,65 +21,28 @@ import {
   Activity,
   CheckCircle,
 } from "lucide-react";
+import type { ServiceRequest } from "@/lib/requests";
 
-/* ──────────────────────────── Dummy Data ──────────────────────────── */
-const serviceRequests = [
-  {
-    id: "REQ-4201",
-    dateTime: "May 27, 2026 · 10:14 AM",
-    customer: "Margaret Thompson",
-    phone: "(512) 555-8821",
-    email: "m.thompson@example.com",
-    location: "Georgetown",
-    serviceType: "Service",
-    issue: "Complete system failure — no cooling, thermostat unresponsive",
-    status: "Awaiting Dispatch",
-  },
-  {
-    id: "REQ-4202",
-    dateTime: "May 27, 2026 · 10:42 AM",
-    customer: "Robert & Linda Chen",
-    phone: "(512) 555-3347",
-    email: "rchen.tx@example.com",
-    location: "Round Rock",
-    serviceType: "Commercial and Residential",
-    issue: "AC blowing warm air, compressor making loud noise",
-    status: "Technician En Route",
-  },
-  {
-    id: "REQ-4203",
-    dateTime: "May 27, 2026 · 11:05 AM",
-    customer: "David Nguyen",
-    phone: "(512) 555-6190",
-    email: "david.n88@example.com",
-    location: "Cedar Park",
-    serviceType: "Maintenance",
-    issue: "Annual tune-up and filter replacement",
-    status: "Scheduled",
-  },
-  {
-    id: "REQ-4204",
-    dateTime: "May 27, 2026 · 11:38 AM",
-    customer: "Patricia Davis",
-    phone: "(512) 555-4455",
-    email: "patty.davis@example.com",
-    location: "Leander",
-    serviceType: "Service",
-    issue: "Frozen evaporator coil — ice buildup on indoor unit",
-    status: "On Site",
-  },
-  {
-    id: "REQ-4205",
-    dateTime: "May 27, 2026 · 12:01 PM",
-    customer: "William Foster",
-    phone: "(512) 555-7723",
-    email: "wfoster.tech@example.com",
-    location: "Sun City",
-    serviceType: "Maintenance",
-    issue: "Seasonal inspection before summer, duct cleaning",
-    status: "Completed",
-  },
-];
+/* ──────────────────────────── Helpers ──────────────────────────── */
+
+// The API stores ISO timestamps; the board reads better as "May 27, 2026 · 10:14 AM".
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const time = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${date} · ${time}`;
+}
+
+// How often the dashboard re-pulls the board. Fast enough to feel live,
+// slow enough that we're not hammering the server for nothing.
+const POLL_INTERVAL_MS = 15_000;
 
 /* ──────────────────────────── Nav Config ──────────────────────────── */
 const navItems = [
@@ -305,32 +267,73 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<typeof serviceRequests[0] | null>(null);
+  // Hold just the id and derive the row from the board data, so the open
+  // modal always shows the latest polled state with no syncing effect.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Initialize notifications state with an isRead flag
-  const [notifications, setNotifications] = useState(() => 
-    serviceRequests
-      .filter((r) => r.status !== "Completed")
-      .map((r) => ({ ...r, isRead: false }))
-  );
+  // Live board data from the API.
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // Which requests the dispatcher has searched for; empty shows everything.
+  const [query, setQuery] = useState("");
+
+  // Notification read/dismiss state lives on the client only; the poll below
+  // rebuilds the notification list from fresh data but keeps these flags.
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  const loadRequests = useCallback(async () => {
+    try {
+      const res = await fetch("/api/requests", { cache: "no-store" });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      setRequests(data.requests);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(
+        err instanceof Error ? err.message : "Could not load service requests."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Deferred so the first fetch isn't a synchronous setState in the effect.
+    const initial = setTimeout(loadRequests, 0);
+    const timer = setInterval(loadRequests, POLL_INTERVAL_MS);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(timer);
+    };
+  }, [loadRequests]);
+
+  const selectedRequest = selectedId
+    ? requests.find((r) => r.id === selectedId) ?? null
+    : null;
+
+  // Notifications = everything not completed and not dismissed.
+  const notifications = requests
+    .filter((r) => r.status !== "Completed" && !dismissedIds.has(r.id))
+    .map((r) => ({ ...r, isRead: readIds.has(r.id) }));
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+    setReadIds(new Set(notifications.map((n) => n.id)));
   };
 
   const dismissNotification = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotifications(notifications.filter(n => n.id !== id));
-  };
-  
-  const markAsRead = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
+    setDismissedIds(new Set([...dismissedIds, id]));
   };
 
-  const [requests, setRequests] = useState(serviceRequests);
+  const markAsRead = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setReadIds(new Set([...readIds, id]));
+  };
 
   const openRequests = requests.filter((r) => r.status === "Awaiting Dispatch").length;
   const dispatched = requests.filter(
@@ -338,13 +341,27 @@ export default function AdminDashboard() {
   ).length;
   const completed = requests.filter((r) => r.status === "Completed").length;
 
-  const updateStatus = (id: string, newStatus: string) => {
-    setRequests(requests.map((r) => (r.id === id ? { ...r, status: newStatus } : r)));
+  // Optimistic update first so the dropdown feels instant, then persist.
+  // If the PATCH fails we re-pull the board to get back to the truth.
+  const updateStatus = async (id: string, newStatus: string) => {
+    setRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: newStatus as ServiceRequest["status"] } : r))
+    );
+    try {
+      const res = await fetch(`/api/requests/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    } catch {
+      loadRequests();
+    }
   };
 
   let displayedRequests = requests;
   let tableTitle = "Incoming Service Requests";
-  
+
   if (activeTab === "Active Dispatches") {
     displayedRequests = requests.filter(
       (r) => r.status === "Technician En Route" || r.status === "On Site"
@@ -355,6 +372,17 @@ export default function AdminDashboard() {
       (r) => r.serviceType === "Maintenance" && r.status !== "Completed"
     );
     tableTitle = "Maintenance Schedule";
+  }
+
+  // The search box matches against anything a dispatcher would think to type.
+  const q = query.trim().toLowerCase();
+  if (q !== "") {
+    displayedRequests = displayedRequests.filter((r) =>
+      [r.id, r.customer, r.phone, r.email, r.location, r.serviceType, r.issue, r.status]
+        .join(" ")
+        .toLowerCase()
+        .includes(q)
+    );
   }
 
   return (
@@ -401,13 +429,15 @@ export default function AdminDashboard() {
             <input
               type="text"
               placeholder="Search requests..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               className="bg-transparent text-sm text-slate-300 placeholder:text-slate-600 outline-none w-full"
             />
           </div>
 
           {/* Notifications */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
               className="relative p-2 rounded-lg hover:bg-slate-800 text-slate-500 transition-colors"
             >
@@ -426,7 +456,7 @@ export default function AdminDashboard() {
                   <h3 className="font-bold text-white">Notifications</h3>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
-                      <button 
+                      <button
                         onClick={markAllAsRead}
                         className="text-[10px] font-medium text-slate-400 hover:text-blue-400 transition-colors"
                       >
@@ -439,11 +469,11 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div className="max-h-[300px] overflow-y-auto">
-                  {notifications.map(req => (
-                    <div 
-                      key={req.id} 
+                  {notifications.map((req) => (
+                    <div
+                      key={req.id}
                       onClick={(e) => markAsRead(req.id, e)}
-                      className={`p-4 border-b border-slate-800/50 hover:bg-slate-800/50 transition-colors cursor-pointer group relative ${req.isRead ? 'opacity-50' : ''}`}
+                      className={`p-4 border-b border-slate-800/50 hover:bg-slate-800/50 transition-colors cursor-pointer group relative ${req.isRead ? "opacity-50" : ""}`}
                     >
                       <button
                         onClick={(e) => dismissNotification(req.id, e)}
@@ -453,11 +483,11 @@ export default function AdminDashboard() {
                         <X className="w-3.5 h-3.5" />
                       </button>
                       <div className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!req.isRead ? ((req.serviceType === 'Service' || req.serviceType === 'Commercial and Residential') ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-blue-500') : 'bg-slate-600'}`} />
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!req.isRead ? ((req.serviceType === "Service" || req.serviceType === "Commercial and Residential") ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" : "bg-blue-500") : "bg-slate-600"}`} />
                         <div className="pr-6">
-                          <p className={`text-sm font-semibold transition-colors ${!req.isRead ? 'text-slate-200 group-hover:text-white' : 'text-slate-400'}`}>{req.serviceType}</p>
+                          <p className={`text-sm font-semibold transition-colors ${!req.isRead ? "text-slate-200 group-hover:text-white" : "text-slate-400"}`}>{req.serviceType}</p>
                           <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">{req.issue}</p>
-                          <p className="text-[10px] text-slate-500 mt-2 font-medium">{req.dateTime} · {req.customer}</p>
+                          <p className="text-[10px] text-slate-500 mt-2 font-medium">{formatDateTime(req.createdAt)} · {req.customer}</p>
                         </div>
                       </div>
                     </div>
@@ -472,7 +502,7 @@ export default function AdminDashboard() {
                   )}
                 </div>
                 <div className="p-2 border-t border-slate-800 bg-slate-950/50 flex gap-2">
-                  <button 
+                  <button
                     onClick={() => setNotificationsOpen(false)}
                     className="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                   >
@@ -486,11 +516,28 @@ export default function AdminDashboard() {
 
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          
+
           {activeTab === "Settings" ? (
             <div className="flex flex-col items-center justify-center h-64 text-slate-500">
               <Settings className="w-12 h-12 mb-4 text-slate-600" />
               <p className="text-lg">Settings configuration coming soon.</p>
+            </div>
+          ) : loading ? (
+            <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+              <Activity className="w-10 h-10 mb-4 text-slate-600 animate-pulse" />
+              <p className="text-lg">Loading service requests...</p>
+            </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+              <AlertTriangle className="w-10 h-10 mb-4 text-red-500/70" />
+              <p className="text-lg">Couldn&apos;t load the board.</p>
+              <p className="text-sm mt-2">{loadError}</p>
+              <button
+                onClick={loadRequests}
+                className="mt-4 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-semibold text-white transition-colors"
+              >
+                Try again
+              </button>
             </div>
           ) : (
             <>
@@ -562,14 +609,14 @@ export default function AdminDashboard() {
                         {displayedRequests.map((r) => (
                       <tr
                         key={r.id}
-                        onClick={() => setSelectedRequest(r)}
+                        onClick={() => setSelectedId(r.id)}
                         className="hover:bg-slate-800/50 transition-colors duration-150 cursor-pointer group"
                       >
                         {/* Date / Time */}
                         <td className="px-5 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2 text-sm text-slate-400">
                             <Clock className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
-                            {r.dateTime}
+                            {formatDateTime(r.createdAt)}
                           </div>
                         </td>
 
@@ -603,13 +650,22 @@ export default function AdminDashboard() {
 
                         {/* Status */}
                         <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
-                          <StatusDropdown 
-                            status={r.status} 
-                            onChange={(s) => updateStatus(r.id, s)} 
+                          <StatusDropdown
+                            status={r.status}
+                            onChange={(s) => updateStatus(r.id, s)}
                           />
                         </td>
                       </tr>
                     ))}
+                    {displayedRequests.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-500">
+                          {q !== ""
+                            ? `No requests match "${query.trim()}".`
+                            : "No requests here yet. New bookings will show up automatically."}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -658,18 +714,27 @@ export default function AdminDashboard() {
                   {selectedRequest.location}
                 </div>
               </div>
-              <button 
-                onClick={() => setSelectedRequest(null)}
+              <button
+                onClick={() => setSelectedId(null)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-6">
-              <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Service Type</p>
-                <ServiceBadge type={selectedRequest.serviceType} />
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Service Type</p>
+                  <ServiceBadge type={selectedRequest.serviceType} />
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</p>
+                  <StatusDropdown
+                    status={selectedRequest.status}
+                    onChange={(s) => updateStatus(selectedRequest.id, s)}
+                  />
+                </div>
               </div>
 
               <div>
@@ -694,11 +759,15 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
+
+              <p className="text-[11px] text-slate-600">
+                {selectedRequest.id} · Submitted {formatDateTime(selectedRequest.createdAt)}
+              </p>
             </div>
 
             <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
-              <button 
-                onClick={() => setSelectedRequest(null)}
+              <button
+                onClick={() => setSelectedId(null)}
                 className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 Close

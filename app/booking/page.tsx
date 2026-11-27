@@ -25,6 +25,18 @@ interface FormData {
   issue: string;
 }
 
+// Value is what the select holds, label is what the customer sees. The API
+// stores the label so the admin board reads "Cedar Park", not "cedar-park".
+const locations = [
+  { value: "georgetown", label: "Georgetown" },
+  { value: "leander", label: "Leander" },
+  { value: "cedar-park", label: "Cedar Park" },
+  { value: "round-rock", label: "Round Rock" },
+  { value: "sun-city", label: "Sun City" },
+  { value: "pflugerville", label: "Pflugerville" },
+  { value: "austin", label: "Austin" },
+];
+
 /* ──────────────────────────── Service Cards ──────────────────────────── */
 const services = [
   {
@@ -69,6 +81,11 @@ const services = [
 export default function BookingPage() {
   const [selectedService, setSelectedService] = useState<ServiceType>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // The id the server assigns (REQ-####), shown on the confirmation screen
+  // so the customer has something to reference.
+  const [confirmedId, setConfirmedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -90,9 +107,38 @@ export default function BookingPage() {
     }, 100);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!selectedService || submitting) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          location:
+            locations.find((l) => l.value === formData.location)?.label ?? formData.location,
+          serviceType: selectedService,
+        }),
+      });
+      if (!res.ok) {
+        // The API sends back { error } with a readable reason.
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Something went wrong submitting your request.");
+      }
+      const data = await res.json();
+      setConfirmedId(data.request.id);
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Something went wrong submitting your request."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass =
@@ -230,13 +276,11 @@ export default function BookingPage() {
                         }`}
                       >
                         <option value="" disabled>--Please choose an option--</option>
-                        <option value="georgetown">Georgetown</option>
-                        <option value="leander">Leander</option>
-                        <option value="cedar-park">Cedar Park</option>
-                        <option value="round-rock">Round Rock</option>
-                        <option value="sun-city">Sun City</option>
-                        <option value="pflugerville">Pflugerville</option>
-                        <option value="austin">Austin</option>
+                        {locations.map((l) => (
+                          <option key={l.value} value={l.value}>
+                            {l.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -253,12 +297,19 @@ export default function BookingPage() {
                     </div>
                   </div>
 
+                  {submitError && (
+                    <p className="text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded px-4 py-3 mb-6">
+                      {submitError}
+                    </p>
+                  )}
+
                   <div className="text-center mt-8">
                     <button
                       type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wider uppercase py-4 px-12 rounded transition-colors shadow-md"
+                      disabled={submitting}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold tracking-wider uppercase py-4 px-12 rounded transition-colors shadow-md"
                     >
-                      SUBMIT NOW
+                      {submitting ? "Submitting..." : "SUBMIT NOW"}
                     </button>
                   </div>
                 </form>
@@ -271,9 +322,15 @@ export default function BookingPage() {
               <Snowflake className="w-10 h-10 text-blue-600" />
             </div>
             <h2 className="text-3xl font-bold text-slate-900 mb-4">Request Received</h2>
-            <p className="text-slate-600 mb-8 max-w-md mx-auto">
+            <p className="text-slate-600 mb-2 max-w-md mx-auto">
               Thank you, {formData.firstName}. We have received your request for {selectedService} and will be in touch shortly.
             </p>
+            {confirmedId && (
+              <p className="text-sm text-slate-500 mb-8">
+                Your reference number is{" "}
+                <span className="font-mono font-bold text-slate-700">{confirmedId}</span>
+              </p>
+            )}
             <Link
               href="/"
               className="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded hover:bg-blue-700 transition-colors"
