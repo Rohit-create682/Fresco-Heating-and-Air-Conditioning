@@ -12,6 +12,7 @@ export default function Navbar() {
     { label: "Services", href: "/#services" },
     { label: "Areas", href: "/#areas" },
     { label: "Reviews", href: "/#reviews" },
+    { label: "FAQ", href: "/#faq" },
     { label: "Contact", href: "/#contact" },
   ];
 

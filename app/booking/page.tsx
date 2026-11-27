@@ -384,11 +384,24 @@ export default function BookingPage() {
               </p>
             )}
             {emailSent && (
-              <p className="text-sm text-slate-500 mb-8">
+              <p className="text-sm text-slate-500 mb-4">
                 A confirmation email is on its way to{" "}
                 <span className="font-semibold text-slate-700">{formData.email}</span>.
               </p>
             )}
+
+            {/* Play back what they sent so they can spot a typo */}
+            <div className="max-w-sm mx-auto text-left bg-slate-50 border border-slate-200 rounded-lg p-5 mb-8">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Your request</p>
+              <dl className="space-y-1.5 text-sm">
+                <div className="flex justify-between gap-4"><dt className="text-slate-500">Service</dt><dd className="text-slate-800 font-medium text-right">{selectedService}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-slate-500">Location</dt><dd className="text-slate-800 font-medium text-right">{locations.find((l) => l.value === formData.location)?.label ?? formData.location}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-slate-500">Phone</dt><dd className="text-slate-800 font-medium text-right">{formData.phone}</dd></div>
+                {(formData.preferredDate || formData.preferredTime) && (
+                  <div className="flex justify-between gap-4"><dt className="text-slate-500">Preferred</dt><dd className="text-slate-800 font-medium text-right">{[formData.preferredDate, formData.preferredTime].filter(Boolean).join(" · ")}</dd></div>
+                )}
+              </dl>
+            </div>
             <Link
               href="/"
               className="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded hover:bg-blue-700 transition-colors"

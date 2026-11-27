@@ -760,14 +760,15 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Contact Info</p>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                  {/* tap to call/email, dispatchers live on these */}
+                  <a href={`tel:${selectedRequest.phone}`} className="block bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 hover:border-blue-500/50 transition-colors">
                     <p className="text-[10px] text-slate-500 font-semibold mb-0.5">Phone</p>
-                    <p className="text-sm text-slate-200">{selectedRequest.phone}</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                    <p className="text-sm text-blue-400">{selectedRequest.phone}</p>
+                  </a>
+                  <a href={`mailto:${selectedRequest.email}`} className="block bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 hover:border-blue-500/50 transition-colors break-all">
                     <p className="text-[10px] text-slate-500 font-semibold mb-0.5">Email</p>
-                    <p className="text-sm text-slate-200">{selectedRequest.email}</p>
-                  </div>
+                    <p className="text-sm text-blue-400">{selectedRequest.email}</p>
+                  </a>
                 </div>
               </div>
 

@@ -94,6 +94,36 @@ function Hero() {
   );
 }
 
+/* ──────────────────────────── Stats band ──────────────────────────── */
+// Quick numbers under the hero: the caller's first "why should I trust you"
+// gets answered before they even scroll.
+const stats: { value: string; label: string; star?: boolean }[] = [
+  { value: "12+", label: "Years in Business" },
+  { value: "2,400+", label: "Homes Served" },
+  { value: "4.9", label: "Average Rating", star: true },
+  { value: "60 min", label: "Emergency Response" },
+];
+
+function StatsBand() {
+  return (
+    <section className="border-y border-slate-100 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+        {stats.map((s) => (
+          <div key={s.label} className="text-center">
+            <p className="text-3xl md:text-4xl font-extrabold text-slate-900">
+              {s.value}
+              {s.star && (
+                <Star className="inline w-6 h-6 -mt-1 ml-1 fill-amber-400 text-amber-400" />
+              )}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ──────────────────────────── Features ──────────────────────────── */
 const features = [
   {
@@ -448,6 +478,7 @@ export default function HomePage() {
     <main className="flex-1">
       <Navbar />
       <Hero />
+      <StatsBand />
       <Features />
       <Services />
       <Areas />
