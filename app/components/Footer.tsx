@@ -139,7 +139,7 @@ export default function Footer() {
           {/* Bottom copyright */}
           <div className="mt-10 pt-6 border-t border-slate-200 text-center text-xs text-slate-400">
             <p>
-              &copy; {new Date().getFullYear()} Fresco Heating &amp; Air Conditioning. All
+              &copy; {new Date().getFullYear()}{" "}Fresco Heating &amp; Air Conditioning. All
               rights reserved. &middot; TACLA License #TACLB27082E
             </p>
           </div>
