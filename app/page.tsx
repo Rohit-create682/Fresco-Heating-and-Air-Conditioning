@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Footer from "./components/Footer";
 import {
@@ -323,6 +324,86 @@ function Testimonials() {
   );
 }
 
+/* ──────────────────────────── FAQ ──────────────────────────── */
+// The questions every HVAC customer asks before they call. Answering them
+// up front is half the sales pitch.
+const faqs = [
+  {
+    q: "How fast can you get here?",
+    a: "For emergencies we aim to have a technician at your door within 60 minutes, anywhere in our service area. Standard appointments are usually available same-day or next-day.",
+  },
+  {
+    q: "Do you charge for estimates?",
+    a: "Never. Every visit starts with a free, no-pressure estimate. You'll know the exact price before we touch anything, and that price doesn't change.",
+  },
+  {
+    q: "What brands do you work on?",
+    a: "All of them. Trane, Carrier, Lennox, Rheem, Goodman and every other major brand. Our technicians are factory-trained and carry the most common parts on the truck.",
+  },
+  {
+    q: "Are your technicians licensed and insured?",
+    a: "Yes. Fresco is fully licensed (TACLB27082E), bonded and insured, and every technician passes a background check before their first job.",
+  },
+  {
+    q: "Is a maintenance plan actually worth it?",
+    a: "Almost always. Two tune-ups a year catches small problems before they become $2,000 compressor failures, and members get priority scheduling plus 15% off repairs.",
+  },
+];
+
+function Faq() {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <section id="faq" className="py-20 bg-white">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+            Common <span className="text-blue-600">Questions</span>
+          </h2>
+          <p className="mt-3 text-slate-500">
+            Everything homeowners usually ask before booking.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((f, i) => {
+            const isOpen = open === i;
+            return (
+              <div
+                key={f.q}
+                className={`rounded-2xl border transition-all duration-300 ${
+                  isOpen ? "border-blue-200 bg-blue-50/40 shadow-sm" : "border-slate-200 bg-white hover:border-blue-100"
+                }`}
+              >
+                <button
+                  onClick={() => setOpen(isOpen ? null : i)}
+                  aria-expanded={isOpen}
+                  className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left"
+                >
+                  <span className="font-semibold text-slate-900">{f.q}</span>
+                  <span
+                    className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      isOpen ? "bg-blue-600 text-white rotate-45" : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                    </svg>
+                  </span>
+                </button>
+                {isOpen && (
+                  <p className="px-6 pb-5 text-sm text-slate-600 leading-relaxed animate-fade-in-up">
+                    {f.a}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ──────────────────────────── CTA Banner ──────────────────────────── */
 function CtaBanner() {
   return (
@@ -371,6 +452,7 @@ export default function HomePage() {
       <Services />
       <Areas />
       <Testimonials />
+      <Faq />
       <CtaBanner />
       <Footer />
     </main>
