@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRequest, listRequests } from "@/lib/requests";
 import { sendBookingConfirmation } from "@/lib/email";
+import { PREFERRED_TIME_WINDOWS } from "@/lib/service-locations";
 
 // Never cache this; the admin dashboard polls it for live data.
 export const dynamic = "force-dynamic";
@@ -52,6 +53,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
+  // Scheduling preferences are optional, but if they show up they have to
+  // be well-formed: a real date and one of the windows the form offers.
+  const preferred: { preferredDate?: string; preferredTime?: string } = {};
+  if (typeof body.preferredDate === "string" && body.preferredDate.trim() !== "") {
+    const d = body.preferredDate.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(Date.parse(d))) {
+      return NextResponse.json({ error: "Invalid preferred date" }, { status: 400 });
+    }
+    preferred.preferredDate = d;
+  }
+  if (typeof body.preferredTime === "string" && body.preferredTime.trim() !== "") {
+    const t = body.preferredTime.trim();
+    if (!PREFERRED_TIME_WINDOWS.includes(t)) {
+      return NextResponse.json({ error: "Invalid preferred time window" }, { status: 400 });
+    }
+    preferred.preferredTime = t;
+  }
+
   const created = await createRequest({
     customer: `${fields.firstName} ${fields.lastName}`,
     email: fields.email,
@@ -59,11 +78,13 @@ export async function POST(request: Request) {
     location: fields.location,
     serviceType: fields.serviceType,
     issue: fields.issue,
+    ...preferred,
   });
 
   // Awaits but never throws: if email isn't configured or SendGrid hiccups,
-  // the booking still succeeds and we just log it.
-  await sendBookingConfirmation(created);
+  // the booking still succeeds and we just log it. The flag lets the
+  // confirmation screen tell the customer the email is actually on its way.
+  const emailSent = await sendBookingConfirmation(created);
 
-  return NextResponse.json({ request: created }, { status: 201 });
+  return NextResponse.json({ request: created, emailSent }, { status: 201 });
 }

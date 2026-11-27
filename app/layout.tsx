@@ -33,6 +33,32 @@ export const metadata: Metadata = {
   },
 };
 
+// Structured data so Google understands this is a local HVAC business
+// (rich results, maps knowledge panel). Keep in sync with the footer.
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HVACBusiness",
+  name: "Fresco Heating & Air Conditioning",
+  telephone: "+1-512-395-5883",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Georgetown",
+    addressRegion: "TX",
+    addressCountry: "US",
+  },
+  areaServed: [
+    "Georgetown TX",
+    "Leander TX",
+    "Cedar Park TX",
+    "Round Rock TX",
+    "Sun City TX",
+    "Pflugerville TX",
+    "Austin TX",
+  ],
+  openingHours: "Mo-Su 00:00-24:00",
+  priceRange: "$$",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,7 +69,13 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

@@ -746,6 +746,17 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {(selectedRequest.preferredDate || selectedRequest.preferredTime) && (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Requested Time</p>
+                  <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                    <p className="text-sm text-slate-200">
+                      {[selectedRequest.preferredDate, selectedRequest.preferredTime].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Contact Info</p>
                 <div className="grid grid-cols-2 gap-4">

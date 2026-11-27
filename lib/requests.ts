@@ -25,6 +25,10 @@ export interface ServiceRequest {
   serviceType: string;
   issue: string;
   status: Status;
+  // Optional scheduling preferences from the booking form. Older records
+  // (and the seeds below) simply don't have them.
+  preferredDate?: string; // YYYY-MM-DD
+  preferredTime?: string; // one of PREFERRED_TIME_WINDOWS
 }
 
 /* ──────────────────────────── Storage ──────────────────────────── */

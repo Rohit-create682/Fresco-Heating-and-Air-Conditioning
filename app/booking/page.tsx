@@ -12,7 +12,7 @@ import {
   Snowflake,
   Phone,
 } from "lucide-react";
-import { SERVICE_LOCATIONS } from "@/lib/service-locations";
+import { SERVICE_LOCATIONS, PREFERRED_TIME_WINDOWS } from "@/lib/service-locations";
 
 /* ──────────────────────────── Types ──────────────────────────── */
 type ServiceType = string | null;
@@ -24,6 +24,8 @@ interface FormData {
   phone: string;
   location: string;
   issue: string;
+  preferredDate: string;
+  preferredTime: string;
 }
 
 // Value is what the select holds, label is what the customer sees. The API
@@ -80,6 +82,7 @@ export default function BookingPage() {
   // The id the server assigns (REQ-####), shown on the confirmation screen
   // so the customer has something to reference.
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -87,6 +90,8 @@ export default function BookingPage() {
     phone: "",
     location: "",
     issue: "",
+    preferredDate: "",
+    preferredTime: "",
   });
 
   const updateField = (field: keyof FormData, value: string) => {
@@ -140,6 +145,7 @@ export default function BookingPage() {
       }
       const data = await res.json();
       setConfirmedId(data.request.id);
+      setEmailSent(Boolean(data.emailSent));
       setSubmitted(true);
     } catch (err) {
       setSubmitError(
@@ -233,6 +239,7 @@ export default function BookingPage() {
                       <input
                         type="text"
                         placeholder="First Name"
+                        aria-label="First Name"
                         required
                         value={formData.firstName}
                         onChange={(e) => updateField("firstName", e.target.value)}
@@ -243,6 +250,7 @@ export default function BookingPage() {
                       <input
                         type="text"
                         placeholder="Last Name"
+                        aria-label="Last Name"
                         required
                         value={formData.lastName}
                         onChange={(e) => updateField("lastName", e.target.value)}
@@ -255,6 +263,7 @@ export default function BookingPage() {
                       <input
                         type="email"
                         placeholder="Email Address"
+                        aria-label="Email Address"
                         required
                         value={formData.email}
                         onChange={(e) => updateField("email", e.target.value)}
@@ -267,6 +276,7 @@ export default function BookingPage() {
                       <input
                         type="tel"
                         placeholder="Phone Number"
+                        aria-label="Phone Number"
                         required
                         value={formData.phone}
                         onChange={(e) => updateField("phone", e.target.value)}
@@ -278,6 +288,7 @@ export default function BookingPage() {
                     <div className="md:col-span-2">
                       <select
                         required
+                        aria-label="Service Location"
                         value={formData.location}
                         onChange={(e) => updateField("location", e.target.value)}
                         className={`${inputClass} appearance-none bg-white cursor-pointer ${
@@ -293,10 +304,42 @@ export default function BookingPage() {
                       </select>
                     </div>
 
+                    {/* Optional: when would they like us out? */}
+                    <div>
+                      <input
+                        type="date"
+                        aria-label="Preferred Date (optional)"
+                        min={new Date().toISOString().split("T")[0]}
+                        value={formData.preferredDate}
+                        onChange={(e) => updateField("preferredDate", e.target.value)}
+                        className={`${inputClass} ${
+                          formData.preferredDate === "" ? "text-slate-500" : "text-slate-800"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <select
+                        aria-label="Preferred Time Window (optional)"
+                        value={formData.preferredTime}
+                        onChange={(e) => updateField("preferredTime", e.target.value)}
+                        className={`${inputClass} appearance-none bg-white cursor-pointer ${
+                          formData.preferredTime === "" ? "text-slate-500" : "text-slate-800"
+                        }`}
+                      >
+                        <option value="">No time preference</option>
+                        {PREFERRED_TIME_WINDOWS.map((w) => (
+                          <option key={w} value={w}>
+                            {w}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     {/* The Critical Field */}
                     <div className="md:col-span-2">
                       <textarea
                         placeholder="Describe Your Issue"
+                        aria-label="Describe Your Issue"
                         required
                         rows={5}
                         value={formData.issue}
@@ -335,9 +378,15 @@ export default function BookingPage() {
               Thank you, {formData.firstName}. We have received your request for {selectedService} and will be in touch shortly.
             </p>
             {confirmedId && (
-              <p className="text-sm text-slate-500 mb-8">
+              <p className="text-sm text-slate-500 mb-4">
                 Your reference number is{" "}
                 <span className="font-mono font-bold text-slate-700">{confirmedId}</span>
+              </p>
+            )}
+            {emailSent && (
+              <p className="text-sm text-slate-500 mb-8">
+                A confirmation email is on its way to{" "}
+                <span className="font-semibold text-slate-700">{formData.email}</span>.
               </p>
             )}
             <Link

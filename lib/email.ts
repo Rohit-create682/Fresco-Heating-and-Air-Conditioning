@@ -48,6 +48,9 @@ export function buildConfirmationEmail(r: ServiceRequest): {
     ["Email", r.email],
     ["What's going on", r.issue],
   ];
+  // Only booked-in scheduling preferences show up; most fields stay optional.
+  if (r.preferredDate) details.push(["Preferred date", r.preferredDate]);
+  if (r.preferredTime) details.push(["Preferred time", r.preferredTime]);
 
   const subject = `Booking confirmed (${r.id}) - Fresco Heating & Air`;
 
@@ -94,11 +97,12 @@ export function buildConfirmationEmail(r: ServiceRequest): {
 }
 
 // A failed email must never take the booking down with it, so this never
-// throws; it logs and moves on.
-export async function sendBookingConfirmation(r: ServiceRequest): Promise<void> {
+// throws; it logs and moves on. Returns whether a confirmation actually
+// went out, so the UI can say so.
+export async function sendBookingConfirmation(r: ServiceRequest): Promise<boolean> {
   const apiKey = process.env.SENDGRID_API_KEY;
   const fromEmail = process.env.BOOKING_FROM_EMAIL;
-  if (!apiKey || !fromEmail) return;
+  if (!apiKey || !fromEmail) return false;
 
   const { subject, text, html } = buildConfirmationEmail(r);
   try {
@@ -121,8 +125,11 @@ export async function sendBookingConfirmation(r: ServiceRequest): Promise<void> 
     });
     if (!res.ok) {
       console.warn(`[email] SendGrid rejected the confirmation for ${r.id}: ${res.status} ${await res.text()}`);
+      return false;
     }
+    return true;
   } catch (err) {
     console.warn(`[email] could not send confirmation for ${r.id}:`, err);
+    return false;
   }
 }

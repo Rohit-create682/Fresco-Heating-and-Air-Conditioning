@@ -1,5 +1,7 @@
-// Towns the trucks cover. Shared by the booking form (dropdown) and the
-// confirmation email (turning the saved slug back into a readable name).
+// Shared booking-form data, used by the form itself and by the
+// confirmation email (which turns saved values back into readable names).
+
+// Towns the trucks cover.
 export const SERVICE_LOCATIONS: { value: string; label: string }[] = [
   { value: "georgetown", label: "Georgetown" },
   { value: "leander", label: "Leander" },
@@ -13,3 +15,13 @@ export const SERVICE_LOCATIONS: { value: string; label: string }[] = [
 export function locationLabel(slug: string): string {
   return SERVICE_LOCATIONS.find((l) => l.value === slug)?.label ?? slug;
 }
+
+// The arrival windows a customer can pick. Optional on the form; the API
+// rejects anything not in this list so free-text never lands in the store.
+export const PREFERRED_TIME_WINDOWS = [
+  "As soon as possible",
+  "Morning (8am - 11am)",
+  "Midday (11am - 2pm)",
+  "Afternoon (2pm - 5pm)",
+  "Evening (5pm - 8pm)",
+];
