@@ -1,15 +1,23 @@
 # Fresco Heating & Air Conditioning
 
-Marketing site + booking system for a (fictional) HVAC company in Georgetown, TX.
+Marketing site + booking system for an HVAC company in Georgetown, TX.
 Built with Next.js 16 (App Router), React 19, and Tailwind CSS 4.
 
 ## Pages
 
-- `/` - landing page (hero, features, services, service areas, reviews, contact footer)
+- `/` - landing page (hero, stats, features, services, service areas,
+  reviews, FAQ, contact footer)
 - `/about` - company story
-- `/booking` - service picker + appointment form, submits to the API
+- `/booking` - service picker + appointment form with optional preferred
+  date/time, submits to the API, plays back a summary on confirmation
 - `/admin` - dispatch console: live board of every booking, status pipeline,
-  search, notifications, and a detail modal per request
+  search, notifications, and a detail modal per request (with tap-to-call
+  and tap-to-email links)
+
+SEO basics are in place too: per-page titles/descriptions, `sitemap.xml`,
+`robots.txt` (admin + API excluded), and LocalBusiness structured data.
+Set `NEXT_PUBLIC_SITE_URL` to the real origin when deploying so the
+sitemap and robots files point at it.
 
 ## Backend
 
