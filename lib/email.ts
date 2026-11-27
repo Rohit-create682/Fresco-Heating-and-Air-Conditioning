@@ -2,18 +2,25 @@ import type { ServiceRequest } from "./requests";
 import { locationLabel } from "./service-locations";
 
 /* ──────────────────────────── Confirmation emails ────────────────────────────
-   Sends through SendGrid's Web API over plain HTTPS, so there is no SDK
-   dependency. Free tier is 100 emails/day, far above demo traffic.
+   Sends through a transactional email API over plain HTTPS, so there is no
+   SDK dependency. Two providers are wired up; Brevo wins when both are set:
 
-   Two env vars turn it on (see .env.local.example):
-     SENDGRID_API_KEY    from sendgrid.com, Settings > API Keys
-     BOOKING_FROM_EMAIL  the sender address verified in SendGrid
-                         (Single Sender Verification works with any inbox,
-                         no domain needed; swap in a real domain later and
-                         this code doesn't change)
-   With either one missing we skip quietly, so local dev keeps working
-   before email is set up. */
+     Brevo (primary, free tier 300 emails/day):
+       BREVO_API_KEY       from brevo.com, SMTP & API > API Keys
+       BOOKING_FROM_EMAIL  the sender address verified in Brevo (a Gmail
+                           address works, no domain needed; swap in a real
+                           domain later and this code doesn't change)
 
+     SendGrid (fallback, free tier 100 emails/day):
+       SENDGRID_API_KEY    from sendgrid.com, Settings > API Keys
+       BOOKING_FROM_EMAIL  the sender address verified in SendGrid
+                           (Single Sender Verification)
+
+   With no key set we skip quietly, so local dev keeps working before email
+   is set up. */
+
+const BREVO_URL =
+  process.env.BREVO_API_URL ?? "https://api.brevo.com/v3/smtp/email";
 const SENDGRID_URL =
   process.env.SENDGRID_API_URL ?? "https://api.sendgrid.com/v3/mail/send";
 
@@ -96,38 +103,78 @@ export function buildConfirmationEmail(r: ServiceRequest): {
   return { subject, text, html };
 }
 
+/* Both providers get the same booking and return true when the API accepted
+   the message. Payload shapes differ just enough to keep them apart. */
+
+async function sendViaBrevo(
+  r: ServiceRequest,
+  apiKey: string,
+  fromEmail: string,
+  mail: { subject: string; text: string; html: string }
+): Promise<boolean> {
+  const res = await fetch(BREVO_URL, {
+    method: "POST",
+    headers: { "api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: { email: fromEmail, name: "Fresco Heating & Air Conditioning" },
+      to: [{ email: r.email, name: r.customer }],
+      replyTo: { email: fromEmail, name: "Fresco Heating & Air Conditioning" },
+      subject: mail.subject,
+      textContent: mail.text,
+      htmlContent: mail.html,
+    }),
+  });
+  if (!res.ok) {
+    console.warn(`[email] Brevo rejected the confirmation for ${r.id}: ${res.status} ${await res.text()}`);
+  }
+  return res.ok;
+}
+
+async function sendViaSendGrid(
+  r: ServiceRequest,
+  apiKey: string,
+  fromEmail: string,
+  mail: { subject: string; text: string; html: string }
+): Promise<boolean> {
+  const res = await fetch(SENDGRID_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: r.email, name: r.customer }] }],
+      from: { email: fromEmail, name: "Fresco Heating & Air Conditioning" },
+      reply_to: { email: fromEmail, name: "Fresco Heating & Air Conditioning" },
+      subject: mail.subject,
+      content: [
+        { type: "text/plain", value: mail.text },
+        { type: "text/html", value: mail.html },
+      ],
+    }),
+  });
+  if (!res.ok) {
+    console.warn(`[email] SendGrid rejected the confirmation for ${r.id}: ${res.status} ${await res.text()}`);
+  }
+  return res.ok;
+}
+
 // A failed email must never take the booking down with it, so this never
 // throws; it logs and moves on. Returns whether a confirmation actually
 // went out, so the UI can say so.
 export async function sendBookingConfirmation(r: ServiceRequest): Promise<boolean> {
-  const apiKey = process.env.SENDGRID_API_KEY;
   const fromEmail = process.env.BOOKING_FROM_EMAIL;
-  if (!apiKey || !fromEmail) return false;
+  if (!fromEmail) return false;
 
-  const { subject, text, html } = buildConfirmationEmail(r);
+  const brevoKey = process.env.BREVO_API_KEY;
+  const sendgridKey = process.env.SENDGRID_API_KEY;
+  if (!brevoKey && !sendgridKey) return false;
+
+  const mail = buildConfirmationEmail(r);
   try {
-    const res = await fetch(SENDGRID_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: r.email, name: r.customer }] }],
-        from: { email: fromEmail, name: "Fresco Heating & Air Conditioning" },
-        reply_to: { email: fromEmail, name: "Fresco Heating & Air Conditioning" },
-        subject,
-        content: [
-          { type: "text/plain", value: text },
-          { type: "text/html", value: html },
-        ],
-      }),
-    });
-    if (!res.ok) {
-      console.warn(`[email] SendGrid rejected the confirmation for ${r.id}: ${res.status} ${await res.text()}`);
-      return false;
-    }
-    return true;
+    // Brevo is the day-to-day sender; SendGrid stays around as a spare.
+    if (brevoKey) return await sendViaBrevo(r, brevoKey, fromEmail, mail);
+    return await sendViaSendGrid(r, sendgridKey!, fromEmail, mail);
   } catch (err) {
     console.warn(`[email] could not send confirmation for ${r.id}:`, err);
     return false;

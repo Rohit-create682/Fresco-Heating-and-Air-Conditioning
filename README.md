@@ -40,15 +40,19 @@ write-temp-then-rename so a crash can't corrupt the file.
 ## Confirmation emails
 
 Every booking triggers a confirmation email to the customer (reference
-number plus everything they entered) via SendGrid's Web API. It activates
-once two env vars exist in `.env.local` (copy `.env.local.example`):
+number plus everything they entered) over a plain HTTPS call, no SDK.
+Brevo is the primary provider and SendGrid works as a drop-in fallback.
+It activates once env vars exist in `.env.local` (copy `.env.local.example`):
 
-- `SENDGRID_API_KEY` - sendgrid.com, Settings > API Keys
-- `BOOKING_FROM_EMAIL` - a sender verified under Settings > Sender
-  Authentication (Single Sender Verification needs no domain)
+- `BREVO_API_KEY` - brevo.com, SMTP & API > API Keys (free tier 300
+  emails/day)
+- `BOOKING_FROM_EMAIL` - the sender address verified with the provider
+  (a Gmail address works, no domain needed)
+- `SENDGRID_API_KEY` - optional fallback; used only when no Brevo key is
+  set (sendgrid.com, Settings > API Keys, free tier 100 emails/day)
 
-Without them the emails are skipped and bookings work as normal. SendGrid
-failures are logged, never fatal to a booking. Free tier: 100 emails/day.
+Without a key the emails are skipped and bookings work as normal.
+Provider failures are logged, never fatal to a booking.
 
 ## Running it
 
