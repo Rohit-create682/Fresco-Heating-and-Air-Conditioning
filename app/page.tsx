@@ -43,7 +43,7 @@ function Hero() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/80 text-blue-700 text-sm font-medium mb-8 animate-fade-in-up">
           <Shield className="w-4 h-4" />
-          Licensed &amp; Insured · Serving Georgetown Since 2012
+          Licensed &amp; Insured · Proudly Serving Central Texas
         </div>
 
         {/* Headline */}
@@ -79,7 +79,7 @@ function Hero() {
         {/* Trust badges */}
         <div className="mt-14 flex flex-wrap justify-center gap-8 text-sm text-slate-400 animate-fade-in-up delay-400">
           {[
-            { icon: CheckCircle, text: "4.9★ Google Rating" },
+            { icon: CheckCircle, text: "A+ BBB Accredited" },
             { icon: Clock, text: "Same-Day Service" },
             { icon: Shield, text: "2-Year Warranty" },
           ].map(({ icon: Icon, text }) => (
@@ -98,9 +98,9 @@ function Hero() {
 // Quick numbers under the hero: the caller's first "why should I trust you"
 // gets answered before they even scroll.
 const stats: { value: string; label: string; star?: boolean }[] = [
-  { value: "12+", label: "Years in Business" },
+  { value: "24/7", label: "Emergency Service" },
   { value: "2,400+", label: "Homes Served" },
-  { value: "4.9", label: "Average Rating", star: true },
+  { value: "A+", label: "BBB Accredited" },
   { value: "60 min", label: "Emergency Response" },
 ];
 
@@ -295,21 +295,21 @@ function Areas() {
 /* ──────────────────────────── Testimonials ──────────────────────────── */
 const reviews = [
   {
-    name: "Sarah M.",
-    location: "Georgetown, TX",
-    text: "Our AC went out on a 104° day and Fresco had a technician at our door within 45 minutes. Professional, fair pricing, and our system was running perfectly that same evening. Can't recommend them enough!",
+    name: "Terrace Allebach",
+    location: "Fresco customer",
+    text: "The Fresco professional technicians installed my new HVAC today. It replaced a 16 year old tired system. They were professional, and very respective of my personal property. I would highly recommend this company.",
     rating: 5,
   },
   {
-    name: "James & Linda R.",
-    location: "Round Rock, TX",
-    text: "We've been using Fresco for our annual maintenance for 3 years now. They're always on time, thorough, and their technicians actually explain what they're doing. The best HVAC company we've ever worked with.",
+    name: "Steve Ender",
+    location: "Fresco customer",
+    text: "Fernando and Carlos provided exceptional customer service while tuning up my A/C and heating system back to peak performance! I will definitely be hiring this company again to do any future repairs and/or tune-ups!",
     rating: 5,
   },
   {
-    name: "David K.",
-    location: "Cedar Park, TX",
-    text: "Fernando and his team installed a brand new Trane system in our home. The quote was competitive, the installation was clean, and they even hauled away the old unit at no extra charge. Five stars all the way!",
+    name: "Don Field",
+    location: "Fresco customer",
+    text: "107 degrees outside when my A/C decided to stop cooling. Called and had Carlos at my door within 2 hours of my call. Within 30 minutes problem found and solved. Quality of the work was excellent and Carlos was very professional. Highly recommend!!!",
     rating: 5,
   },
 ];

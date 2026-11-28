@@ -56,7 +56,7 @@ const localBusinessJsonLd = {
     "Pflugerville TX",
     "Austin TX",
   ],
-  openingHours: "Mo-Su 00:00-24:00",
+  openingHours: "Mo-Sa 09:00-18:00",
   priceRange: "$$",
 };
 

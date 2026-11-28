@@ -30,7 +30,7 @@ export default function AboutPage() {
                 />
               </div>
               <h2 className="text-3xl font-bold text-slate-900 leading-tight">
-                Keeping Texas Cool Since 2010.
+                Keeping Central Texas Cool.
               </h2>
             </div>
 
@@ -91,9 +91,9 @@ export default function AboutPage() {
               </div>
               {/* Overlay Badge */}
               <div className="absolute -bottom-6 -right-6 md:-bottom-10 md:-right-10 bg-blue-600 text-white p-8 md:p-12 rounded-2xl shadow-2xl flex flex-col items-center justify-center border-4 border-slate-50">
-                <span className="text-6xl md:text-7xl font-extrabold leading-none mb-2">14</span>
+                <span className="text-6xl md:text-7xl font-extrabold leading-none mb-2">A+</span>
                 <span className="text-sm md:text-base font-bold uppercase tracking-widest text-blue-100 text-center max-w-[120px]">
-                  Years of Experience
+                  BBB Accredited
                 </span>
               </div>
             </div>
