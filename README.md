@@ -54,6 +54,16 @@ It activates once env vars exist in `.env.local` (copy `.env.local.example`):
 Without a key the emails are skipped and bookings work as normal.
 Provider failures are logged, never fatal to a booking.
 
+## Admin access
+
+`/admin` (and the admin API behind it) is locked behind a single shared
+password. Set `ADMIN_PASSWORD` in `.env.local`, then visit `/login` to
+sign in. The session lives in an httpOnly cookie good for one week.
+There are no user accounts; everyone who needs the console shares the
+one password. With no `ADMIN_PASSWORD` set the console fails closed:
+/login answers "not configured" and the admin API returns 401/503.
+Changing the password signs out every existing session.
+
 ## Running it
 
 ```bash

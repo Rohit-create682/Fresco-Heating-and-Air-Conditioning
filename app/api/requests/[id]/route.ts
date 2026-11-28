@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { STATUSES, updateStatus, type Status } from "@/lib/requests";
+import { adminCookieName, isValidAdminSession } from "@/lib/admin-auth";
 
 /* ──────────────────────────── PATCH /api/requests/[id] ────────────────────────────
    The status dropdown in the admin dashboard calls this. Only the status
@@ -9,6 +11,11 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Status changes come from the admin console only, same session cookie.
+  const store = await cookies();
+  if (!isValidAdminSession(store.get(adminCookieName())?.value)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { id } = await params;
 
   let body: Record<string, unknown>;

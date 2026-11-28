@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createRequest, listRequests } from "@/lib/requests";
+import { adminCookieName, isValidAdminSession } from "@/lib/admin-auth";
 import { sendBookingConfirmation } from "@/lib/email";
 import { PREFERRED_TIME_WINDOWS } from "@/lib/service-locations";
 
@@ -9,6 +11,12 @@ export const dynamic = "force-dynamic";
 /* ──────────────────────────── GET /api/requests ────────────────────────────
    Everything on the board, newest first. Used by the admin dashboard. */
 export async function GET() {
+  // Booking data is internal: only the logged-in admin console can read it.
+  // POST stays open, that is the public booking form.
+  const store = await cookies();
+  if (!isValidAdminSession(store.get(adminCookieName())?.value)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const requests = await listRequests();
   return NextResponse.json({ requests });
 }
