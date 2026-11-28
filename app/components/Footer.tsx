@@ -142,6 +142,12 @@ export default function Footer() {
               &copy; {new Date().getFullYear()}{" "}Fresco Heating &amp; Air Conditioning. All
               rights reserved. &middot; TACLA License #TACLB27082E
             </p>
+            {/* Stray visitors shouldn't mistake this prototype for the
+                company's real site. One quiet line is enough. */}
+            <p className="mt-2 text-slate-300">
+              Independent concept demo built for Fresco Heating &amp; Air
+              Conditioning &middot; not the company&rsquo;s official website
+            </p>
           </div>
         </div>
       </div>

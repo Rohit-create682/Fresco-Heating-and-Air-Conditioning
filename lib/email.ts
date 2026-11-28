@@ -164,6 +164,13 @@ async function sendViaSendGrid(
 // throws; it logs and moves on. Returns whether a confirmation actually
 // went out, so the UI can say so.
 export async function sendBookingConfirmation(r: ServiceRequest): Promise<boolean> {
+  // Public demo deployments set BOOKING_EMAILS_ENABLED=false: the booking
+  // still lands on the board, but nothing goes out to real inboxes from a
+  // site strangers can reach. Flip to true for the live pitch demo.
+  if (process.env.BOOKING_EMAILS_ENABLED === "false") {
+    console.info(`[email] confirmations suppressed (BOOKING_EMAILS_ENABLED=false) for ${r.id}`);
+    return false;
+  }
   const fromEmail = process.env.BOOKING_FROM_EMAIL;
   if (!fromEmail) return false;
 
