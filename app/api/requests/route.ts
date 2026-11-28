@@ -14,7 +14,7 @@ export async function GET() {
   // Booking data is internal: only the logged-in admin console can read it.
   // POST stays open, that is the public booking form.
   const store = await cookies();
-  if (!isValidAdminSession(store.get(adminCookieName())?.value)) {
+  if (!(await isValidAdminSession(store.get(adminCookieName())?.value))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const requests = await listRequests();

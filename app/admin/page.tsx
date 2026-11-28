@@ -22,6 +22,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import type { ServiceRequest } from "@/lib/requests";
+import SettingsPanel from "./settings-panel";
 import { formatPreferredDate } from "@/lib/format";
 
 /* ──────────────────────────── Helpers ──────────────────────────── */
@@ -519,10 +520,7 @@ export default function AdminDashboard() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
 
           {activeTab === "Settings" ? (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-              <Settings className="w-12 h-12 mb-4 text-slate-600" />
-              <p className="text-lg">Settings configuration coming soon.</p>
-            </div>
+            <SettingsPanel />
           ) : loading ? (
             <div className="flex flex-col items-center justify-center h-64 text-slate-500">
               <Activity className="w-10 h-10 mb-4 text-slate-600 animate-pulse" />

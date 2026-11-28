@@ -20,7 +20,7 @@ export default async function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const store = await cookies();
-  if (!isValidAdminSession(store.get(adminCookieName())?.value)) {
+  if (!(await isValidAdminSession(store.get(adminCookieName())?.value))) {
     redirect("/login");
   }
   return children;

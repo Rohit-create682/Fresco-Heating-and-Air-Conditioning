@@ -13,7 +13,7 @@ export async function PATCH(
 ) {
   // Status changes come from the admin console only, same session cookie.
   const store = await cookies();
-  if (!isValidAdminSession(store.get(adminCookieName())?.value)) {
+  if (!(await isValidAdminSession(store.get(adminCookieName())?.value))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;

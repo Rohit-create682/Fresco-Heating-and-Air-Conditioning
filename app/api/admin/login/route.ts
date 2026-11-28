@@ -11,7 +11,7 @@ import {
    cookie (httpOnly, a week long) and the /admin layout lets the console
    render. On a miss we just say no. */
 export async function POST(request: Request) {
-  if (!adminPasswordConfigured()) {
+  if (!(await adminPasswordConfigured())) {
     return NextResponse.json(
       { error: "ADMIN_PASSWORD is not set on the server" },
       { status: 503 }
@@ -26,11 +26,11 @@ export async function POST(request: Request) {
   }
 
   const password = body.password;
-  if (typeof password !== "string" || !checkAdminPassword(password)) {
+  if (typeof password !== "string" || !(await checkAdminPassword(password))) {
     return NextResponse.json({ error: "Wrong password" }, { status: 401 });
   }
 
-  const token = adminSessionToken();
+  const token = await adminSessionToken();
   const res = NextResponse.json({ ok: true });
   res.cookies.set(adminCookieName(), token!, {
     httpOnly: true,

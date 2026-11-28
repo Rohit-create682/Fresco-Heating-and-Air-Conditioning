@@ -62,7 +62,13 @@ sign in. The session lives in an httpOnly cookie good for one week.
 There are no user accounts; everyone who needs the console shares the
 one password. With no `ADMIN_PASSWORD` set the console fails closed:
 /login answers "not configured" and the admin API returns 401/503.
-Changing the password signs out every existing session.
+
+The owner can rotate the password themselves from the Settings tab in
+the console (current password required). The new password is stored as
+a salted scrypt hash in `data/admin.json` (gitignored, next to the
+bookings) and takes over from the env var immediately. Changing the
+password signs out every existing session. Deleting `data/admin.json`
+reverts to the `ADMIN_PASSWORD` bootstrap.
 
 ## Running it
 
