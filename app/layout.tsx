@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Without a base, Next builds the og:image URL from whatever host the
+  // request came in on (localhost in production), which breaks link previews.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  ),
   title: "Fresco Heating & Air Conditioning | Georgetown TX HVAC Experts",
   description:
     "Trusted HVAC solutions for Georgetown & surrounding areas. 24/7 emergency service, licensed technicians, free estimates. Call (512) 395-5883 for fast, reliable heating and air conditioning repair.",
